@@ -9,6 +9,32 @@ AMyCharacter::AMyCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	check(FirstPersonCameraComponent != nullptr);
+
+	FirstPersonMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
+	check(FirstPersonMeshComponent != nullptr);
+
+	FirstPersonMeshComponent->SetupAttachment(GetMesh());
+
+	FirstPersonMeshComponent->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+
+	FirstPersonMeshComponent->SetOnlyOwnerSee(true);
+
+	FirstPersonMeshComponent->SetCollisionProfileName(FName("NoCollision"));
+
+	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
+
+	FirstPersonCameraComponent->SetupAttachment(FirstPersonMeshComponent, FName("head"));
+
+	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FirstPersonCameraOffset, FRotator(0.0f, 90.0f, -90.0f));
+
+	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
+	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
+	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
+	FirstPersonCameraComponent->FirstPersonFieldOfView = FirstPersonFieldOfView;
+	FirstPersonCameraComponent->FirstPersonScale = FirstPersonScale;
 }
 
 // Called when the game starts or when spawned
@@ -18,11 +44,20 @@ void AMyCharacter::BeginPlay()
 
 	check(GEngine != nullptr);
 
+	FirstPersonMeshComponent->SetOnlyOwnerSee(true);
+
+	GetMesh()->SetOwnerNoSee(true);
+
+	if (FirstPersonDefaultAnimClass) {
+		FirstPersonMeshComponent->SetAnimInstanceClass(FirstPersonDefaultAnimClass);
+	}
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller)) {
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer())) {
 			Subsystem->AddMappingContext(FirstPersonContext, 0);
 		}
 	}
+
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using AdventureCharacter."));
 }
 

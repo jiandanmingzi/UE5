@@ -10,6 +10,7 @@
 #include "InputActionValue.h"
 #include "MyCharacter.generated.h"
 
+class UAnimInstance;
 class UInputMappingContext;
 class UInputAction;
 class UInputComponent;
@@ -22,6 +23,9 @@ class FIRSTPROGRAM_API AMyCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AMyCharacter();
+
+	UPROPERTY(EditAnywhere, Category = Animation)
+	TSubclassOf<UAnimInstance> FirstPersonDefaultAnimClass;
 
 protected:
 	// Called when the game starts or when spawned
