@@ -74,6 +74,18 @@ void APickupBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	}
 
 	if (bShouldRespawn) {
-		GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &APickupBase::InitializePickup, RespawnTime, false, -1);
+		GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &APickupBase::InitializePickup, RespawnTime, false);
+	}
+}
+
+void APickupBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) {
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	const FName ChangedPropertyName = PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	if (ChangedPropertyName == GET_MEMBER_NAME_CHECKED(APickupBase, PickupItemID) && PickupDataTable){
+		if (const FItemData* ItemDataRow = PickupDataTable->FindRow<FItemData>(PickupItemID, PickupItemID.ToString())){
+			UItemDefinition* TempItemDefinition = ItemDataRow->ItemBase.Get();
+			PickupMeshComponent->SetStaticMesh(TempItemDefinition->WorldMesh.Get());
+			SphereComponent->SetSphereRadius(32.f);
+		}
 	}
 }
