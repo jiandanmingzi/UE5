@@ -14,6 +14,10 @@ class UAnimInstance;
 class UInputMappingContext;
 class UInputAction;
 class UInputComponent;
+class AEquippableToolBase;
+class UEquippableToolDefinition;
+class UInventoryComponent;
+class UItemDefinition;
 
 UCLASS()
 class FIRSTPROGRAM_API AMyCharacter : public ACharacter
@@ -43,6 +47,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	TObjectPtr<UInputAction> UseAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Tools)
+	TObjectPtr<AEquippableToolBase> EquippedTool;
 public:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
@@ -59,11 +68,23 @@ public:
 	UPROPERTY(EditAnywhere, Category = Camera)
 	float FirstPersonScale = 0.6f;
 
+	UPROPERTY(VisibleAnywhere, Category = Inventory)
+	TObjectPtr<UInventoryComponent> InventoryComponent;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION()
+	bool IsToolAlreadyOwned(UEquippableToolDefinition* ToolDefinition);
+
+	UFUNCTION()
+	void GiveItem(UItemDefinition* ItemDefinition);
+
+	UFUNCTION()
+	void AttachTool(UEquippableToolDefinition* ToolDefinition);
 
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);

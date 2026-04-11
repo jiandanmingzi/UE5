@@ -2,6 +2,9 @@
 
 
 #include "MyCharacter.h"
+#include "InventoryComponent.h"  
+#include "EquippableToolBase.h"
+#include "EquippableToolDefinition.h" 
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -35,6 +38,8 @@ AMyCharacter::AMyCharacter()
 	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
 	FirstPersonCameraComponent->FirstPersonFieldOfView = FirstPersonFieldOfView;
 	FirstPersonCameraComponent->FirstPersonScale = FirstPersonScale;
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -99,5 +104,66 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 	if (Controller) {
 		AddControllerYawInput(LookAxisValue.X);
 		AddControllerPitchInput(LookAxisValue.Y);
+	}
+}
+
+bool AMyCharacter::IsToolAlreadyOwned(UEquippableToolDefinition* ToolDefinition)
+{
+	for (UEquippableToolDefinition* InventoryItem : InventoryComponent->ToolInventory)
+	{
+		if (ToolDefinition->ID == InventoryItem->ID)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void AMyCharacter::AttachTool(UEquippableToolDefinition* ToolDefinition)
+{
+	if (not IsToolAlreadyOwned(ToolDefinition))
+	{
+		AEquippableToolBase* ToolToEquip = GetWorld()->SpawnActor<AEquippableToolBase>(ToolDefinition->ToolAsset, this->GetActorTransform());
+		FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+		ToolToEquip->AttachToActor(this, AttachmentRules);
+		ToolToEquip->AttachToComponent(FirstPersonMeshComponent, AttachmentRules, FName(TEXT("HandGrip_R")));
+		FirstPersonMeshComponent->SetAnimInstanceClass(ToolToEquip->FirstPersonToolAnim->GeneratedClass);
+		GetMesh()->SetAnimInstanceClass(ToolToEquip->ThirdPersonToolAnim->GeneratedClass);
+		InventoryComponent->ToolInventory.Add(ToolDefinition);
+		ToolToEquip->OwningCharacter = this;
+		EquippedTool = ToolToEquip;
+		if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(ToolToEquip->ToolMappingContext, 1);
+			}
+			ToolToEquip->BindInputAction(UseAction);
+		}
+	}
+}
+
+void AMyCharacter::GiveItem(UItemDefinition* ItemDefinition)
+{
+	switch (ItemDefinition->ItemType)
+	{
+	case EItemType::Tool:
+	{
+		UEquippableToolDefinition* ToolDefinition = Cast<UEquippableToolDefinition>(ItemDefinition);
+		if (ToolDefinition != nullptr)
+		{
+			AttachTool(ToolDefinition);
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Cast to tool failed!"));
+		}
+		break;
+	}
+	case EItemType::Consumable:
+	{
+		break;
+	}
+	default:
+		break;
 	}
 }

@@ -1,16 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ItemDefinition.h"
+#include "EquippableToolDefinition.h"
 
-UItemDefinition* UItemDefinition::CreateItemCopy() const
+UEquippableToolDefinition* UEquippableToolDefinition::CreateItemCopy() const
 {
-	UItemDefinition* ItemCopy = NewObject<UItemDefinition>(StaticClass());
+	UEquippableToolDefinition* ItemCopy = NewObject<UEquippableToolDefinition>(StaticClass());
 
 	ItemCopy->ID = this->ID;
 	ItemCopy->ItemType = this->ItemType;
 	ItemCopy->ItemText = this->ItemText;
 	ItemCopy->WorldMesh = this->WorldMesh;
+	ItemCopy->ToolAsset = this->ToolAsset;
 
 	return ItemCopy;
 }
