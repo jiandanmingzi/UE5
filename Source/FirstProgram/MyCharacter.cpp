@@ -167,3 +167,19 @@ void AMyCharacter::GiveItem(UItemDefinition* ItemDefinition)
 		break;
 	}
 }
+
+FVector AMyCharacter::GetCameraTargetLocation()
+{
+	FVector TargetPosition;
+
+	UWorld* const World = GetWorld();
+
+	if (World != nullptr) {
+		FHitResult Hit;
+		const FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
+		const FVector TraceEnd = TraceStart + FirstPersonCameraComponent->GetForwardVector() * 10000.0;
+		World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility);
+		TargetPosition = Hit.bBlockingHit ? Hit.ImpactPoint : Hit.TraceEnd;
+	}
+	return TargetPosition;
+}

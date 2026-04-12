@@ -91,4 +91,7 @@ public:
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);
+
+	UFUNCTION()
+	FVector GetCameraTargetLocation();
 };

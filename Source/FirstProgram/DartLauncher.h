@@ -6,10 +6,12 @@
 #include "EquippableToolBase.h"
 #include "DartLauncher.generated.h"
 
+class AFirstPersonProjectile;
+
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class FIRSTPROGRAM_API ADartLauncher : public AEquippableToolBase
 {
 	GENERATED_BODY()
@@ -22,5 +24,7 @@ public:
 
 	virtual void BindInputAction(const UInputAction* InputToBind) override;
 
+	UPROPERTY(EditAnywhere, Category = Projectile)
+	TSubclassOf<AFirstPersonProjectile> ProjectileClass;
 };
 
