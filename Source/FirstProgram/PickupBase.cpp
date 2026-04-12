@@ -22,8 +22,11 @@ APickupBase::APickupBase()
 void APickupBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	InitializePickup();
+
+	if (!PickupDataTable.ToSoftObjectPath().IsNull() && !PickupItemID.IsNone()) {
+		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickupBase::OnSphereBeginOverlap);
+		InitializePickup();
+	}
 }
 
 // Called every frame
@@ -34,23 +37,22 @@ void APickupBase::Tick(float DeltaTime)
 }
 
 void APickupBase::InitializePickup() {
-	if (PickupDataTable && !PickupItemID.IsNone()) {
-		const FItemData* ItemDataRow = PickupDataTable->FindRow<FItemData>(PickupItemID, PickupItemID.ToString());
-
-		UItemDefinition* TempItemDefinition = ItemDataRow->ItemBase.Get();
-
-		ReferenceItem = TempItemDefinition->CreateItemCopy();
-
-		if (TempItemDefinition->WorldMesh.IsValid()) {
-			PickupMeshComponent->SetStaticMesh(TempItemDefinition->WorldMesh.Get());
+	UDataTable* LoadedTable = PickupDataTable.LoadSynchronous();
+	if (LoadedTable != nullptr) {
+		const FItemData* ItemDataRow = LoadedTable->FindRow<FItemData>(PickupItemID, PickupItemID.ToString());
+		if (ItemDataRow != nullptr) {
+			UItemDefinition* TempItemDefinition = ItemDataRow->ItemBase.LoadSynchronous();
+			if (TempItemDefinition != nullptr) {
+				ReferenceItem = TempItemDefinition->CreateItemCopy();
+				UStaticMesh* WorldMesh = TempItemDefinition->WorldMesh.LoadSynchronous();
+				if (WorldMesh != nullptr)
+				{
+					PickupMeshComponent->SetStaticMesh(WorldMesh);
+				}
+				PickupMeshComponent->SetVisibility(true);
+				SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			}
 		}
-		else {
-			UStaticMesh* WorldMesh = TempItemDefinition->WorldMesh.LoadSynchronous();
-			PickupMeshComponent->SetStaticMesh(WorldMesh);
-		}
-		PickupMeshComponent->SetVisibility(true);
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickupBase::OnSphereBeginOverlap);
 	}
 }
 
@@ -63,7 +65,6 @@ void APickupBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (Character != nullptr) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("TRIGGERED"));
 		Character->GiveItem(ReferenceItem);
-		SphereComponent->OnComponentBeginOverlap.RemoveAll(this);
 		PickupMeshComponent->SetVisibility(false);
 		PickupMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -80,11 +81,16 @@ void APickupBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 void APickupBase::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	const FName ChangedPropertyName = PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-	if (ChangedPropertyName == GET_MEMBER_NAME_CHECKED(APickupBase, PickupItemID) && PickupDataTable){
-		if (const FItemData* ItemDataRow = PickupDataTable->FindRow<FItemData>(PickupItemID, PickupItemID.ToString())){
-			UItemDefinition* TempItemDefinition = ItemDataRow->ItemBase.Get();
-			PickupMeshComponent->SetStaticMesh(TempItemDefinition->WorldMesh.Get());
-			SphereComponent->SetSphereRadius(32.f);
+	if (ChangedPropertyName == GET_MEMBER_NAME_CHECKED(APickupBase, PickupItemID)) {
+		UDataTable* Table = PickupDataTable.LoadSynchronous();
+		if (Table && !PickupItemID.IsNone()) {
+			const FItemData* ItemDataRow = Table->FindRow<FItemData>(PickupItemID, PickupItemID.ToString());
+			if (ItemDataRow) {
+				UItemDefinition* TempItemDef = ItemDataRow->ItemBase.LoadSynchronous();
+				if (TempItemDef) {
+					PickupMeshComponent->SetStaticMesh(TempItemDef->WorldMesh.LoadSynchronous());
+				}
+			}
 		}
 	}
 }
