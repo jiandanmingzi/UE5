@@ -31,6 +31,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Animation)
 	TSubclassOf<UAnimInstance> FirstPersonDefaultAnimClass;
 
+	UPROPERTY(EditAnywhere, Category = Animation)
+	TSubclassOf<UAnimInstance> ThirdPersonDefaultAnimClass;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

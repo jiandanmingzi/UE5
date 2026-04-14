@@ -57,6 +57,10 @@ void AMyCharacter::BeginPlay()
 		FirstPersonMeshComponent->SetAnimInstanceClass(FirstPersonDefaultAnimClass);
 	}
 
+	if (ThirdPersonDefaultAnimClass) {
+		GetMesh()->SetAnimInstanceClass(ThirdPersonDefaultAnimClass);
+	}
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller)) {
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer())) {
 			Subsystem->AddMappingContext(FirstPersonContext, 0);
