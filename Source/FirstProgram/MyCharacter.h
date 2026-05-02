@@ -56,7 +56,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Tools)
 	TObjectPtr<AEquippableToolBase> EquippedTool;
 public:
-	UPROPERTY(VisibleAnywhere, Category = Camera)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = Camera)
 	TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = Mesh)
